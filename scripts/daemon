@@ -1,0 +1,25 @@
+description 'node network system startup'
+author 'adpated from ivarprudnikov.com'
+env LOG_FILE=/var/log/replay.log
+env USER=nodejs
+#env NODE_BIN=/usr/bin/node
+env NODE_BIN="/var/www/.nvm/versions/io.js/v1.4.3/bin/iojs --harmony"
+env NODE_ENV="production"
+env SCRIPT_FILE=/var/www/network/server.js
+start on runlevel [23]
+stop on shutdown
+# Respawn in case of a crash, with default parameters
+respawn
+script
+  cd /var/www/network
+  su nodejs -s /bin/bash
+
+  # Make sure logfile exists and can be written by the user we drop privileges to
+  touch $LOG_FILE
+  chown $USER:$USER $LOG_FILE
+  # recommended approach in case of su/sudo usage so that service does not fork
+  exec sudo -u $USER NODE_ENV="development" PORT=5301 $NODE_BIN $SCRIPT_FILE >> $LOG_FILE 2>&1
+end script
+post-start script
+echo "app $NAME post-start event" >> $LOG_FILE
+end script

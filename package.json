@@ -1,0 +1,27 @@
+{
+  "name": "replay-infra",
+  "version": "1.0.0",
+  "description": "infrastructure for replay consumers and bus interaction",
+  "main": "index.js",
+  "dependencies": {
+    "busmq": "^1.5.4",
+    "commander": "^2.9.0",
+    "fs": "^0.0.2",
+    "lodash": "^4.13.1",
+    "redis": "^2.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moshesharon/replay-infra.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/moshesharon/replay-infra/issues"
+  },
+  "homepage": "https://github.com/moshesharon/replay-infra#readme"
+}
