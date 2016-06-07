@@ -1,27 +1,32 @@
 var Promise = require('bluebird'),
 	fs = Promise.promisifyAll(require('fs')),
+  , path = require('path');
 	_ = require('lodash'),
 	VideoMetadata = require('../../../schemas/VideoMetadata');
 
 module.exports.start = function(params){
-	console.log('MetadataParserService started.');
-
+	console.log('MetadataParserService started. params' , params);
 	// extract params and handle metadata
 	var relativePathToData = params.relativePath;
 	var method = params.method;
 
-	console.log('Relative path is: ', relativePathToData);
-	console.log('Method is: ', method);
+	//console.log('Relative path is: ', relativePathToData);
+	//console.log('Method is: ', method);
 
 	// validate params
-	if(!relativePathToData || !process.env.STORAGE_PATH ||
+
+	if(!relativePathToData || !service.env.storagePath ||
 		!method || !method.standard || !method.version){
-		console.log('Some vital parameters are missing.');
+		console.log('Consumer : Some vital parameters are missing. ',
+			        '\n relativePathToData', relativePathToData);
 		return;
 	}
-
+var pathToData= getFileWithPartialName(params.relativePath, params.videoId)
+/*fs.readfile(mytxtfilepath, function(err,data) {
+  console.log(data);
+});*/
 	// concat full path
-	var pathToData = process.env.STORAGE_PATH + '/' + relativePathToData;
+	//var pathToData = service.env.storagePath + '/' + relativePathToData;
 
 	readDataAsString(pathToData)
 	.then(function(data){
@@ -129,4 +134,22 @@ function xmlObjectsToElasticBulkRequest(xmls, params){
 	});
 
 	return bulkRequest;
+}
+
+
+
+function getFileWithPartialName(dir, entryId) {
+  var videoFiles = [];
+  fs.readdir(dir, function(files){
+    for (var i = 0; i < files.length; i++) {
+      if (path.basename(files[i]).indexOf(entryId) !== -1 + ext)
+        videoFiles[] = files[i];
+    }
+  });
+}
+
+
+
+
+
 }

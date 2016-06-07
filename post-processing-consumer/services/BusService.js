@@ -2,27 +2,25 @@ var BusMQ = require('busmq');
 
 var bus;
 
-module.exports = function(){
+/*module.exports = function(){
 	// initialize internal bus object
-	bus = createBus();
 
+	bus = createBus();
 	// exports
 	this.consume = consume;
-}
+}*/
 
 function createBus(){
-	// detect redis host & port
-	var REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-	var REDIS_PORT = process.env.REDIS_PORT || 6379;
-	var REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
-	console.log('Redis host: ', REDIS_HOST);
-	console.log('Redis port: ', REDIS_PORT);
-	console.log('Redis password: ', REDIS_PASSWORD);
+	// detect redis host & port	
+	process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+	process.env.REDIS_PORT = process.env.REDIS_PORT || 6379;
+	process.env.REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
 
 	// append '@' if passowrd supplied
-	REDIS_PASSWORD = REDIS_PASSWORD ? REDIS_PASSWORD + '@' : REDIS_PASSWORD;
+	REDIS_PASSWORD = process.env.REDIS_PASSWORD ? process.env.REDIS_PASSWORD + '@' : process.env.REDIS_PASSWORD;
 
-	var redisUrl = 'redis://' + REDIS_PASSWORD + REDIS_HOST + ':' + REDIS_PORT;
+	var redisUrl = 'redis://' + REDIS_PASSWORD + process.env.REDIS_HOST + ':' +process.env.REDIS_PORT;
+	console.log('redisUrl' , redisUrl);
 	bus = BusMQ.create({redis: [redisUrl]});
 	console.log('Bus was successfuly created.');
 	return bus;
@@ -61,4 +59,9 @@ function produce(queueName, job){
 	  q.push(job);
 	});
 	bus.connect();
+}
+module.exports={
+	createBus:createBus,
+	consume:consume,
+	produce:produce
 }

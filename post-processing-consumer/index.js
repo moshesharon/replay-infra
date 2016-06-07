@@ -1,9 +1,15 @@
-var BusService = require('BusService'),
+var BusService = require('./services/BusService'),
+    env        = require('../config/env/development'), 
     mongoose = require('mongoose'),
     elasticsearch = require('elasticsearch'),
     JobsService = require('JobsService'),
     _ = require('lodash');
 
+//console.log(Object.getOwnPropertyNames(BusService))
+
+console.log(Object.getOwnPropertyNames(BusService))
+
+BusService.createBus()
 
 // notify we're up, and check input
 console.log('Post processing consumer is up!');
@@ -14,9 +20,9 @@ if (!isInputValid()) {
 connectDatabases();
 
 // create bus
-// BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
-// BusService.consume(process.env.QUEUE_NAME, handleMessage);
-handleMessage({
+BusService.consume("PostProcessing", handleMessage);
+
+/*handleMessage({
     type: 'MetadataParser',
     params: {
         videoId: 'someVideoId',
@@ -27,47 +33,52 @@ handleMessage({
         }
     }
 });
-
+*/
 
 // enforces basic validations on the environment input passed to process,
 // such as mandatory parameters.
 // later on, specific functions should enforce specific validations on their inputs
 function isInputValid() {
-    console.log('Job type is: ', process.env.JOB_TYPE);
-    console.log('Redis host: ', process.env.REDIS_HOST);
-    console.log('Redis port: ', process.env.REDIS_PORT);
-    console.log('Redis password: ', process.env.REDIS_PASSWORD);
-    console.log('Mongo host: ', process.env.MONGO_HOST);
-    console.log('Mongo port: ', process.env.MONGO_PORT);
-    console.log('Mongo database: ', process.env.MONGO_DATABASE);
-    console.log('Elastic host: ', process.env.ELASTIC_HOST);
-    console.log('Elastic port: ', process.env.ELASTIC_PORT);
-    console.log('Files storage path: ', process.env.STORAGE_PATH);
-    console.log('Queue is: ', process.env.QUEUE_NAME);
+ /*   console.log('Job type is: ', env.jobType);
+    console.log('Redis host: ', env.redisHost);
+    console.log('Redis port: ', env.redisPort);
+    console.log('Redis password: ',env.redisPassword);
+    console.log('Mongo host: ', env.mongoHost);
+    console.log('Mongo port: ', env.mongoPort);
+    console.log('Mongo database: ', env.mongoDataBase);
+    console.log('Elastic host: ', env.elasticHost);
+    console.log('Elastic port: ', env.elasticPort);
+    console.log('Files storage path: ', env.storagePath);
+    console.log('Queue is: ', env.queue_name);*/
 
     // check mandatory parameter we can't continue without
-    if (!process.env.QUEUE_NAME || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH)
+    if (!env.queue_name || !env.mongoDataBase || !env.storagePath)
         return false;
-
+ 
     return true;
 }
 
 function handleMessage(message) {
+
+    console.log("consumer: handleMessage message : ",message)
     // detect service job type
-    var jobType = process.env.JOB_TYPE;
+    var jobType = "MetadataParser";
+    message = JSON.parse(message);
     // JOB_TYPE can be empty (handle all jobs), or a specific known JOB TYPE.
     // message.type must be a known specific job.
     if ((jobType && !JobsService.isKnownJobType(jobType)) ||
-        !JobsService.isKnownJobType(message.type)) {
+        !JobsService.isKnownJobType(message.type)) {       
         console.log('Bad job type was inserted');
         return;
     }
 
     // in case we are handling all job types, or,
     // the job type is of our type
-    if (!jobType || message.type === jobType) {
+    if (!jobType || message.type === jobType) {       
         var serviceName = JobsService.getServiceName(message.type);
         service = require('./services/ProcessingServices/' + serviceName);
+        service.env = env;
+        console.log("consumer handleMessage" , message)
         if (service)
             service.start(message.params);
         else
@@ -82,8 +93,8 @@ function connectDatabases() {
 }
 
 function connectMongo() {
-    var host = process.env.MONGO_HOST || 'localhost';
-    var port = process.env.MONGO_PORT || 27017;
+    var host = env.mongoHost;
+    var port = env.mongoPort;
 
     var keepAliveInSeconds = 60 * 60 * 24 * 30; // 30 days
     // initialize options
@@ -100,15 +111,15 @@ function connectMongo() {
         }
     };
 
-    var uri = 'mongodb://' + host + ':' + port + '/' + process.env.MONGO_DATABASE;
+    var uri = 'mongodb://' + host + ':' + port + '/' + env.mongoDataBase;
     // connect to mongo
     mongoose.connect(uri, options);
     global.mongoose = mongoose;
 }
 
 function connectElasticSearch() {
-    var host = process.env.ELASTIC_HOST || 'localhost';
-    var port = process.env.ELASTIC_PORT || 9200;
+    var host = env.elasticHost;
+    var port = env.elasticPort;
 
     var uri = host + ':' + port;
     // connect to elastic
